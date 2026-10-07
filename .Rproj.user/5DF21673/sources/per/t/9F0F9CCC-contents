@@ -1,0 +1,55 @@
+---
+title: "Resampling Methods: Cross-Validation"
+subtitle: "ISLR, Chapter 5.1"
+author: "Shrey Sati and Maggie Huang"
+date: today
+date-format: long
+format: 
+  revealjs:
+    theme: serif
+    slide-number: true
+    transition: fade
+    transition-speed: fast
+    center: true
+---
+
+## Motivation
+
+
+## 5.1.1: Validation Set Approach
+
+Test. This is a sample description.
+- Test bullet
+- Test bullet 2
+
+
+## 5.1.2: Leave-One-Out Cross-Validation
+
+$\sum_{i=1}^{n} x_i$
+
+## 5.1.3: k-fold Cross Validation
+
+## Quarto
+
+Quarto enables you to weave together content and executable code into a finished presentation. To learn more about Quarto presentations see <https://quarto.org/docs/presentations/>.
+
+## Bullets
+
+When you click the **Render** button a document will be generated that includes:
+
+-   Content authored with markdown
+-   Output from executable code
+
+## Code
+
+When you click the **Render** button a presentation will be generated that includes both content and the output of embedded code. You can embed code like this:
+
+```{r}
+x <- 1
+y <- 2
+for (i in 1:3){
+  print("Hello")
+}
+```
+
+
