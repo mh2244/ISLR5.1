@@ -10,7 +10,7 @@
   <meta name="generator" content="quarto-1.7.32">
 
   <meta name="author" content="Shrey Sati and Maggie Huang">
-  <meta name="dcterms.date" content="2026-10-07">
+  <meta name="dcterms.date" content="2026-10-08">
   <title>Resampling Methods: Cross-Validation</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -139,44 +139,85 @@ Shrey Sati and Maggie Huang
 </div>
 </div>
 
-  <p class="date">October 7, 2026</p>
+  <p class="date">October 8, 2026</p>
 </section>
-<section id="motivation" class="slide level2 center">
-<h2>Motivation</h2>
-</section>
-<section id="validation-set-approach" class="slide level2 center">
-<h2>5.1.1: Validation Set Approach</h2>
-<p>Test. This is a sample description. - Test bullet - Test bullet 2</p>
-</section>
-<section id="leave-one-out-cross-validation" class="slide level2 center">
-<h2>5.1.2: Leave-One-Out Cross-Validation</h2>
-<p><span class="math inline">\(\sum_{i=1}^{n} x_i\)</span></p>
-</section>
-<section id="k-fold-cross-validation" class="slide level2 center">
-<h2>5.1.3: k-fold Cross Validation</h2>
-</section>
-<section id="quarto" class="slide level2 center">
-<h2>Quarto</h2>
-<p>Quarto enables you to weave together content and executable code into a finished presentation. To learn more about Quarto presentations see <a href="https://quarto.org/docs/presentations/" class="uri">https://quarto.org/docs/presentations/</a>.</p>
-</section>
-<section id="bullets" class="slide level2 center">
-<h2>Bullets</h2>
-<p>When you click the <strong>Render</strong> button a document will be generated that includes:</p>
+<section id="the-problem" class="slide level2 center">
+<h2>The Problem</h2>
 <ul>
-<li>Content authored with markdown</li>
-<li>Output from executable code</li>
+<li>Chapter 2: Test error rate is the average error resulting from using a statistical learning method to predict response on new observation, not in the training set</li>
+<li>What if test error cannot be easily calculated, and a designated test set is not available?</li>
+<li>The training error can easily be calculated by applying statistical learning methods to training data</li>
+<li>training error rate can be very different from test error rate, where the format canunderestimate the other</li>
+</ul>
+<aside class="notes">
+<p>Hello</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="the-solution-one-of-them-anyway" class="slide level2 center">
+<h2>The Solution (one of them, anyway)</h2>
+<ul>
+<li>So if no test set is available to directly estimate the test error rate, then how can be estimat this quantity with the available training data?</li>
+<li>Many methods, but in this one, will think about HOLDING out a subset of the training data from itting procedss then applying learning method to those observations</li>
 </ul>
 </section>
-<section id="code" class="slide level2 center">
-<h2>Code</h2>
-<p>When you click the <strong>Render</strong> button a presentation will be generated that includes both content and the output of embedded code. You can embed code like this:</p>
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code>[1] "Hello"
-[1] "Hello"
-[1] "Hello"</code></pre>
-</div>
-</div>
+<section id="set-up" class="slide level2 center">
+<h2>Set-UP</h2>
+<p>aim for 6-7 minutes You fit a model to your data. Great! Is it ready to use IRL? who knows But how useful is it against new data? How can we evaluate? resampling methods - cross validation - We’ll be using Auto package from ISLR - Fit models mpg and horsepower, vs horsepower squared on 392 training data</p>
+</section>
+<section id="validation-set-approach" class="slide level2 center">
+<h2>Validation Set Approach</h2>
+<p>Randomly divide the training data or avaialble ser of observations into 2 parts - Training set: fit the model using this data - Use fitted model to predict responses for observatiosn in validation set - Validation set or hold-out set:resulting validation set error rate typ assessing using MSE in cae of quantitative response to estimate test error rate</p>
+</section>
+<section id="comparison-of-2-models" class="slide level2 center">
+<h2>Comparison of 2 models</h2>
+<ul>
+<li>ch 3:look at p-values of 2 coefficients</li>
+<li>CONS:</li>
+<li>Here, use validation sets. validation set MSE for cubic fit slightly than for quadratic fit</li>
+<li>right panel - validation est error can be variable</li>
+<li>in validation approach - methods tend to perform worse trained on fewer obs</li>
+</ul>
+</section>
+<section id="leave-one-out-cross-validation" class="slide level2 center">
+<h2>Leave-One-Out Cross-Validation</h2>
+<p><span class="math inline">\(CV_{(n)} = \frac{1}{n} \sum_{i=1}^{n} MSE_{i}\)</span></p>
+</section>
+<section id="loocv-advantages-over-validation-set" class="slide level2 center">
+<h2>LOOCV advantages over validation set</h2>
+<ul>
+<li>far less bias</li>
+<li>training sets with n-1 oserations,</li>
+</ul>
+<p><span class="math inline">\(CV_{(n)} = \frac{1}{n} \sum_{i=1}^{n} \left( \frac{y_i - \hat{y_i}}{1-h_i} \right)\)</span> - _i: ith fitted value from original least squares fit - _i leverage defined in 3.37 in 99 - leverage lies between <span class="math inline">\(\frac{1}{n}\)</span> and 1, reflecting amount observation influences its own fit. - good for any kind fo predictive modeling</p>
+</section>
+<section id="k-fold-cross-validation" class="slide level2 center">
+<h2>k-fold Cross Validation</h2>
+<p>-Alternative to LOOCV is k-fold CV - randomly divide set of observations, first told treated as validaition set and method on remaining <span class="math inline">\(k-1\)</span> folds. - <span class="math inline">\(MSE_1\)</span> comptered on obs on the held out fold<br>
+- repeat process k times - each time, different group of obs treated as validation set - k estimates of test error - average MSEs</p>
+<p><span class="math inline">\(CV_{(k)} = \frac{1}{k} \sum_{i=1}^{k} MSE_{i}\)</span></p>
+<ul>
+<li>LOOCV is special case of k-fold CV where k is set to equal n.</li>
+<li>Computational advantage</li>
+</ul>
+</section>
+<section id="real-vs.-simulated-data" class="slide level2 center">
+<h2>Real vs.&nbsp;simulated data</h2>
+<ul>
+<li>real data, don’t know true test MSE so hard to see accuracy of cross validation estimate</li>
+<li>simulated data - compute true test MSE, evalute accuracy of cross-vaildaiotion</li>
+<li>Only intersted in location of minium point in estimtted test MSE curve,</li>
+<li>perfomring cross-validation on many learning methods, or single method wit hdifferent levels of flexibility to ID methods resulting in lowest test error</li>
+</ul>
 
 </section>
     </div>
@@ -340,7 +381,7 @@ Shrey Sati and Maggie Huang
         previewLinks: false,
 
         // Transition style (none/fade/slide/convex/concave/zoom)
-        transition: 'fade',
+        transition: 'slide',
 
         // Transition speed (default/fast/slow)
         transitionSpeed: 'fast',
