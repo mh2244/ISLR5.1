@@ -58,7 +58,7 @@ $$y_{mpg} = \beta_0 + \beta_{horsepower}^2 x$$
 
 
 :::{.notes}
-For the first three topics, we'll be using the Auto dataset from the ISLR library in R, which records 9 variables like miles per gallon, horsepower, weight, and year for 392 vehicles. 
+For the first three topics, we'll be using the Auto dataset from the ISLR library in R, which records 9 variables like miles per gallon, horsepower, weight, and year for 392 vehicles.  
 :::
 
 ## The Problem
@@ -132,14 +132,14 @@ This is where leave-one-out cross-validation comes in. This time, we split the d
 :::
 
 ## LOOCV advantages over Validation Set
-- Far less bias
+- Less bias
 - Less likely to overestimate the test error rate
 - Performing LOOCV multiple times does not drastically change results
 
 ![](fig5.4.png){fig-alt="Cross-Validation on Auto dataset"}
 
 :::{.notes}
-The biggest advantages to this approach compared to the validation set are that it reduces bias and 
+The biggest advantages to this approach compared to the validation set are that it reduces bias and it is less likely to overestimate the MSE since we're using n-1 observations or most of the dataset to fit the model. This can be seen in the figure below. The left graph shows what we might see if we were to just apply LOOCV. The right graph does multiple simulations of LOOCV, and unlike the validation method, we can see that even across different runs, the MSE does vary, but it's a lot less compared to the validation method.
 :::
 
 ## However...
@@ -152,16 +152,18 @@ $CV_{(n)} = \frac{1}{n} \sum_{i=1}^{n} \left( \frac{y_i - \hat{y_i}}{1-h_i} \rig
 - good for any kind fo predictive modeling
 
 :::{.notes}
-The error rate here is similar to the ordinary MSE, but the ith residual is divided by 1-h. The residuals for high-leverage or highly influential points are inflated by the right amount and the equality holds. 5.2 cannot, however, be used for all types of predictive modelling, though LOOCV can.
+The error rate here is similar to the ordinary MSE, but the ith residual is divided by 1-h. The residuals for high-leverage or highly influential points are inflated by the right amount and the equality holds. 5.2 cannot, however, be used for all types of predictive modelling, though LOOCV can be used for different types of predictive modelling.
 :::
 
 ## k-fold Cross Validation
 
--Alternative to LOOCV is k-fold CV
-- randomly divide set of observations, first told treated as validaition set and method on remaining $k-1$ folds. 
-- $MSE_1$ comptered on obs on the held out fold\
-- repeat process k times
-- each time, different group of obs treated as validation set
+- Alternative to LOOCV is k-fold CV
+- Randomly divide set of observations into "folds" of equal size. 
+- The first told is treated as a validation set
+- Statistical method is applied on remaining $k-1$ folds. 
+- $MSE_1$ computed on observations on the held out fold.
+- Repeat process k times
+- Each time, different group of obs treated as validation set
 - k estimates of test error
 - average MSEs
 
@@ -170,18 +172,24 @@ $CV_{(k)} = \frac{1}{k} \sum_{i=1}^{k} MSE_{i}$
 - LOOCV is special case of k-fold CV where k is set to equal n.
 - Computational advantage
 
-:::{.notes}
+![](fig5.5.png){fig-alt="k-fold Cross-Validation on Auto dataset. Observations 11, 76, and 5 in the first fold are used in the validation set, but later only in the training set. Observation 47 becomes part of the validation set in the fifth iteration."}
 
+:::{.notes}
+Another alternative to LOOCV is k-fold cross-validation. In this approach, we're dividing the set of observations into $k$ groups of $folds$, of approximately equal size. The first fold is treated as validation set, and the method is fit on the remaining $k-1$ folds or sets. The MSE is calculated based on the validation set, or the held-out fold. We repeat this process $k$ times, as seen in the figure below. We can also see how the LOOCV is basically a special case of k-fold CV, but we're using $n$ folds. K-fold CV is computationally less expensive in this regard. There's also bias-variance trade-off, which Shrey will be going over later.
 :::
 
-## Real vs. simulated data
-- real data, don't know true test MSE so hard to see accuracy of cross validation estimate
-- simulated data - compute true test MSE, evalute accuracy of cross-vaildaiotion 
-- Only intersted in location of minium point in estimtted test MSE curve,
-- perfomring cross-validation on many learning methods, or single method wit hdifferent levels of flexibility to ID methods resulting in lowest test error
+## Real vs. Simulated Data
+- Use simulated data to see how well these methods capture the true MSE curves.
+- In some cases, we may be more interested in the minimum point of the MSE curve.
 
+![](fig5.6.png){fig-alt="True and estimated test MSE for simulated datasets. True MSE is in blue, LOOCV estimate in black, and the k-fold CV where k=10 shown in orange"}
 
+:::{.notes}
+Now, when we work with real data, we don't know what the true MSE of the test set is. Therefore, it can be difficult to see how accurate each method is. Therefore, we might use simulated data and apply those techniques on simulated data to evaluate how accurate cross-validation methods are. In this the figure below, we've simulated data and plotted 
+The true test MSE is displayed in blue, the black dash is the LOOCV and the orange is the 10-fold CV estimates.
+:::
 
-
+## What's Coming Next?
+- Shrinkage methods
 
 
