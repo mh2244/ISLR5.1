@@ -6,22 +6,28 @@
 <script src="Cross_Validation_Presentation_files/libs/quarto-html/tippy.umd.min.js"></script>
 <link href="Cross_Validation_Presentation_files/libs/quarto-html/tippy.css" rel="stylesheet">
 <link href="Cross_Validation_Presentation_files/libs/quarto-html/light-border.css" rel="stylesheet">
-<link href="Cross_Validation_Presentation_files/libs/quarto-html/quarto-syntax-highlighting-37eea08aefeeee20ff55810ff984fec1.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
-  <meta name="generator" content="quarto-1.7.32">
+<link href="Cross_Validation_Presentation_files/libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
+  <meta name="generator" content="quarto-1.10.18">
 
   <meta name="author" content="Shrey Sati and Maggie Huang">
-  <meta name="dcterms.date" content="2026-10-08">
-  <title>Resampling Methods: Cross-Validation</title>
+  <meta name="dcterms.date" content="2026-10-15">
+  <title>Cross-Validation</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
   <link rel="stylesheet" href="Cross_Validation_Presentation_files/libs/revealjs/dist/reset.css">
   <link rel="stylesheet" href="Cross_Validation_Presentation_files/libs/revealjs/dist/reveal.css">
   <style>
-    code{white-space: pre-wrap;}
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
     span.smallcaps{font-variant: small-caps;}
-    div.columns{display: flex; gap: min(4vw, 1.5em);}
-    div.column{flex: auto; overflow-x: auto;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
     div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
     ul.task-list{list-style: none;}
     ul.task-list li input[type="checkbox"] {
@@ -30,7 +36,7 @@
       vertical-align: middle;
     }
   </style>
-  <link rel="stylesheet" href="Cross_Validation_Presentation_files/libs/revealjs/dist/theme/quarto-816793a8a4a837d14f6ea458e2f1c5cb.css">
+  <link rel="stylesheet" href="Cross_Validation_Presentation_files/libs/revealjs/dist/theme/quarto-0427d8d92a431aa6a6430e53ec02a470.css">
   <link href="Cross_Validation_Presentation_files/libs/revealjs/plugin/quarto-line-highlight/line-highlight.css" rel="stylesheet">
   <link href="Cross_Validation_Presentation_files/libs/revealjs/plugin/reveal-menu/menu.css" rel="stylesheet">
   <link href="Cross_Validation_Presentation_files/libs/revealjs/plugin/reveal-menu/quarto-menu.css" rel="stylesheet">
@@ -128,29 +134,30 @@
     <div class="slides">
 
 <section id="title-slide" class="quarto-title-block center">
-  <h1 class="title">Resampling Methods: Cross-Validation</h1>
+  <h1 class="title">Cross-Validation</h1>
   <p class="subtitle">ISLR, Chapter 5.1</p>
 
 <div class="quarto-title-authors">
 <div class="quarto-title-author">
 <div class="quarto-title-author-name">
-Shrey Sati and Maggie Huang 
+Shrey Sati and Maggie Huang
 </div>
 </div>
 </div>
 
-  <p class="date">October 8, 2026</p>
+  <p class="date">October 15, 2026</p>
 </section>
-<section id="the-problem" class="slide level2 center">
-<h2>The Problem</h2>
-<ul>
-<li>Chapter 2: Test error rate is the average error resulting from using a statistical learning method to predict response on new observation, not in the training set</li>
-<li>What if test error cannot be easily calculated, and a designated test set is not available?</li>
-<li>The training error can easily be calculated by applying statistical learning methods to training data</li>
-<li>training error rate can be very different from test error rate, where the format canunderestimate the other</li>
-</ul>
+<section id="section-5.1" class="slide level2 center">
+<h2>Section 5.1</h2>
+<ol type="1">
+<li>The Validation Set Approach</li>
+<li>Leave-One-Out Cross-Validation (LOOCV)</li>
+<li>k-Fold Cross-Validation (k-fold CV)</li>
+<li>Bias-Variance Trade-Off for k-fold Cross-Validation</li>
+<li>Cross-Validation on Classification Problems</li>
+</ol>
 <aside class="notes">
-<p>Hello</p>
+<p>Hello, today we will be talking about chapter 5.1, which is about cross-validation methods. I’ll be going over the validation set approach, leave-one-out cross-validation, k-fold cross-validation. After, Shrey will follow up with bias-variance trade-off in k-fold cross-validation, cross-validation on classification problems, and the worksheet.</p>
 <style type="text/css">
         span.MJX_Assistive_MathML {
           position:absolute!important;
@@ -163,61 +170,337 @@ Shrey Sati and Maggie Huang
           display:block!important;
       }</style></aside>
 </section>
-<section id="the-solution-one-of-them-anyway" class="slide level2 center">
-<h2>The Solution (one of them, anyway)</h2>
+<section id="the-problem" class="slide level2 center">
+<h2>The Problem</h2>
 <ul>
-<li>So if no test set is available to directly estimate the test error rate, then how can be estimat this quantity with the available training data?</li>
-<li>Many methods, but in this one, will think about HOLDING out a subset of the training data from itting procedss then applying learning method to those observations</li>
+<li>From previous chapters, we learned how to fit linear and logistic regression models to training data and methods to select an appropriate model</li>
+<li>Minimizing the training error rate does not mean the model will perform well against new data</li>
+<li>Cross validation: hold out a part of the training data as a validation set
+<ul>
+<li>Use MSE to quantify how well the model generalizes to new data</li>
+<li>Compare models</li>
+</ul></li>
 </ul>
+<aside class="notes">
+<p>From previous sections, we learned how to fit linear and logistic regression models to training data and methods to select an appropriate model. In particular, we looked at things like reducing the mean squared error, or the difference between the observations in the training data and the predictions made by the model and increasing adjusted R^2 to capture as much variance in the data without overfitting. In doing so, we’ve minimized the error in our training dataset. However, this does not mean the model will perform well in new situations. When fitting the model, we have full access to the data, we can tweak our model to get the best metrics (adjusted R^2, AIC, BIC, MSE, etc.). However, we would not know how the model could perform against new data, which the model hasn’t accounted for. Can the model capture the true trends in a data-generating process, or is it just optimized solely for the training data? Before we deploy a model in real life, it would help to have a test set available. If one is not available, we can create one by holding out a part of the training data to use as a validation set–that’s the essence of cross-validation.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
 </section>
-<section id="set-up" class="slide level2 center">
-<h2>Set-UP</h2>
-<p>aim for 6-7 minutes You fit a model to your data. Great! Is it ready to use IRL? who knows But how useful is it against new data? How can we evaluate? resampling methods - cross validation - We’ll be using Auto package from ISLR - Fit models mpg and horsepower, vs horsepower squared on 392 training data</p>
+<section id="example-set-up" class="slide level2 center" style="font-size: 0.7em;">
+<h2>Example Set-Up</h2>
+<div class="columns">
+<div class="column" style="width:50%;">
+<ul>
+<li><code>Auto</code> dataset in <code>ISLR</code> library: gas mileage, horsepower, and 7 other variables for 392 vehicles.</li>
+<li>Response variable: miles per gallon (mpg)</li>
+<li>Predictor: engine horsepower</li>
+<li>Focus on minimizing the test error, or <span class="math inline">\(MSE: \sum_{i=1}^{n} (y_i - \hat{y}_i)^2\)</span></li>
+<li>Models:</li>
+</ul>
+<ol type="1">
+<li><span class="math inline">\(y = \beta_0 + \beta_1x + \epsilon\)</span></li>
+<li><span class="math inline">\(y = \beta_0 + \beta_1 x + \beta_2 x^2 + \epsilon\)</span> <span class="math inline">\(\vdots\)</span></li>
+<li><span class="math inline">\(y = \beta_0 + \beta_1 x + \beta_2 x^2 + ... + \beta_{10} x^{10} + \epsilon\)</span></li>
+</ol>
+</div><div class="column" style="width:50%;">
+<div class="centre">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="fig3.8.png" style="width:80.0%" alt="Auto dataset"></p>
+<figcaption><code>Auto</code> data with <code>mpg</code> and <code>horsepower</code> plotted. Three different linear regression fits have been overlaid onto the data.</figcaption>
+</figure>
+</div>
+</div>
+</div></div>
+<aside class="notes">
+<p>In the following methods and examples, we’re using the Auto dataset from the ISLR library. This dataset tracks 9 different variables for 392 vehicles. For simplicity, we’re only focusing on miles per gallon, which is the response variable, and horsepower, which is the predictor. As the dataset is nonlinear, we’ll also be looking at models which include all polynomial terms up to degree 10.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
 </section>
-<section id="validation-set-approach" class="slide level2 center">
+<section id="validation-set-approach" class="slide level2 center" style="font-size: 0.8em;">
 <h2>Validation Set Approach</h2>
-<p>Randomly divide the training data or avaialble ser of observations into 2 parts - Training set: fit the model using this data - Use fitted model to predict responses for observatiosn in validation set - Validation set or hold-out set:resulting validation set error rate typ assessing using MSE in cae of quantitative response to estimate test error rate</p>
-</section>
-<section id="comparison-of-2-models" class="slide level2 center">
-<h2>Comparison of 2 models</h2>
 <ul>
-<li>ch 3:look at p-values of 2 coefficients</li>
-<li>CONS:</li>
-<li>Here, use validation sets. validation set MSE for cubic fit slightly than for quadratic fit</li>
-<li>right panel - validation est error can be variable</li>
-<li>in validation approach - methods tend to perform worse trained on fewer obs</li>
+<li>One-time process where we divide the available dataset into two parts:
+<ul>
+<li>Training set</li>
+<li>Validation set or Hold-out set</li>
+</ul></li>
+<li>The percentage of data to allocate for training versus validation sets can vary</li>
 </ul>
+<div class="centre">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="fig5.1.png" style="width:80.0%" alt="Validation Set Schematic"></p>
+<figcaption>Dataset is split into training and hold-out sets. Observations 7, 22, and 13 are in the training set in blue; observation 91 is in the validation set</figcaption>
+</figure>
+</div>
+</div>
+<aside class="notes">
+<p>In the validation set approach, we randomly split the available data once into 2 sets: our training data, which we use to fit the model, and our test or hold-out dataset. The percentage of how much to allocate to the training vs.&nbsp;test dataset can vary. For example, in undergraduate statistics courses, you might have been taught to do a 70/30 or 80/20 split, where a majority of data is used for training and we hold out a smaller percentage as the validation set, though these rules can vary depending on how much data you have to work with. A schematic is presented here, where blue indicates the training dataset and orange the testing dataset. We use our fitted model to predict the observations in the test dataset, then compare the error, or MSE to assess the accuracy of the model. We want to minimize the MSE.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
 </section>
-<section id="leave-one-out-cross-validation" class="slide level2 center">
+<section id="disadvantages-of-the-validation-set-approach" class="slide level2 center" style="font-size: 0.7em;">
+<h2>Disadvantages of the Validation Set Approach</h2>
+<ul>
+<li>MSE can vary depending on which data points end up in the training versus validation sets</li>
+<li>The full dataset is not used to fit the model, so the test MSE may be overestimated</li>
+</ul>
+<div class="centre">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="fig5.2.png" style="width:80.0%" alt="MSE of model over different runs"></p>
+<figcaption>Comparing MSE from one versus many runs using the validation set approach, where MPG is modelled with polynomial terms of the predictor, engine horsepower</figcaption>
+</figure>
+</div>
+</div>
+<aside class="notes">
+<p>However, there are two major drawbacks to this approach, which can be seen in Figure 2 below. The first one is that the MSE can vary depending on how the data is split. The graph on the left shows MSE on the y-axis, and the x-axis shows the degree of the polynomial that was fitted and used against the test data set: for example, horsepower^2, cubed, etc., all the way until a power of 10. If we were to just follow the regular steps, where the data is split once, we might observe something like on the left, where polynomial of degree 2 decreases the MSE substantially and overall leads to better predictions, while higher polynomials don’t necessarily improve the model accuracy by much.</p>
+<p>However, if we were to repeat this process over and over again, splitting the dataset in randomly, repeating the fitting and testing process, we might get something like the graph on the right, where each line is a different iteration of this process. And while we’re noticing similar trends in the polynomial with degree 2 functions lead to a relatively lower MSE, in absolute terms, some have much higher errors than other iterations. The dataset could be split in such a way that the training and testing sets look very different from each other, and impact the model’s predictive accuracy.</p>
+<p>The second concern is that the MSE might be overestimated. Splitting the dataset results in smaller datasets for the training and testing sets, which can inflate the error.</p>
+<p>So overall, while it’s one approach, it’s not ideal. Are there other alternatives?</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="leave-one-out-cross-validation" class="slide level2 center" style="font-size: 0.8em;">
 <h2>Leave-One-Out Cross-Validation</h2>
-<p><span class="math inline">\(CV_{(n)} = \frac{1}{n} \sum_{i=1}^{n} MSE_{i}\)</span></p>
-</section>
-<section id="loocv-advantages-over-validation-set" class="slide level2 center">
-<h2>LOOCV advantages over validation set</h2>
 <ul>
-<li>far less bias</li>
-<li>training sets with n-1 oserations,</li>
-</ul>
-<p><span class="math inline">\(CV_{(n)} = \frac{1}{n} \sum_{i=1}^{n} \left( \frac{y_i - \hat{y_i}}{1-h_i} \right)\)</span> - _i: ith fitted value from original least squares fit - _i leverage defined in 3.37 in 99 - leverage lies between <span class="math inline">\(\frac{1}{n}\)</span> and 1, reflecting amount observation influences its own fit. - good for any kind fo predictive modeling</p>
-</section>
-<section id="k-fold-cross-validation" class="slide level2 center">
-<h2>k-fold Cross Validation</h2>
-<p>-Alternative to LOOCV is k-fold CV - randomly divide set of observations, first told treated as validaition set and method on remaining <span class="math inline">\(k-1\)</span> folds. - <span class="math inline">\(MSE_1\)</span> comptered on obs on the held out fold<br>
-- repeat process k times - each time, different group of obs treated as validation set - k estimates of test error - average MSEs</p>
-<p><span class="math inline">\(CV_{(k)} = \frac{1}{k} \sum_{i=1}^{k} MSE_{i}\)</span></p>
+<li>Divide the dataset into 2 parts:
 <ul>
-<li>LOOCV is special case of k-fold CV where k is set to equal n.</li>
-<li>Computational advantage</li>
+<li>Test set has 1 observation: <span class="math inline">\((x_1, y_1)\)</span>.</li>
+<li>Training set has <span class="math inline">\(n-1\)</span> observations: <span class="math inline">\({(x_2, y_2), (x_3, y_3),...,(x_n, y_n)}\)</span>.</li>
+</ul></li>
+<li>Calculate <span class="math inline">\(MSE_1 = (y_1 - \hat{y}_1)^2\)</span>. Repeat <span class="math inline">\(n\)</span> times for <span class="math inline">\(n\)</span> MSEs.</li>
+<li><span class="math inline">\(CV_{(n)} = \frac{1}{n} \sum_{i=1}^{n} MSE_{i}\)</span></li>
+</ul>
+
+<img data-src="fig5.3.png" style="width:70.0%" alt="Schematic of LOOCV" class="r-stretch quarto-figure-center"><p class="caption">In each iteration, a different data point is chosen to be in the validation set, shown in orange. The training set is shown in blue.</p><aside class="notes">
+<p>This is where leave-one-out cross-validation comes in. This time, we split the dataset such that the training set consists of n-1 observations, while the test set only has 1 observation. A schematic of what this might look like. We can then obtain the mean squared error for that one point, which in this case is x1, y1. Repeating this n times and taking their average, we’ll obtain the LOOCV estimate for the test MSE. In each iteration, the test data point is not used in the fitting process, so we get an approximately unbiased test error estimate.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="advantages-of-loocv-over-the-validation-set-method" class="slide level2 center" style="font-size: 0.8em;">
+<h2>Advantages of LOOCV Over the Validation Set Method</h2>
+<ul>
+<li>Less bias and less likely to overestimate the test error rate</li>
+<li>Performing LOOCV multiple times does not drastically change estimated MSEs</li>
+</ul>
+
+<img data-src="fig5.4.png" style="width:100.0%" alt="Cross-Validation on Auto dataset" class="r-stretch quarto-figure-center"><p class="caption">The left plot shows us the test error when running LOOCV once. The second shows us MSE curves over 10 iterations. Unlike the validation set approach, MSEs remain relatively consistent over each run.</p><aside class="notes">
+<p>The biggest advantages to this approach compared to the validation set are that it reduces bias and it is less likely to overestimate the MSE since we’re using n-1 observations or most of the dataset to fit the model. This can be seen in the figure below. The left graph shows what we might see if we were to just apply LOOCV. The right graph does multiple simulations of LOOCV, and unlike the validation method, we can see that even across different runs, the MSE does vary, but it’s a lot less compared to the validation method.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="disadvantages-of-loocv" class="slide level2 center" style="font-size: 0.8em;">
+<h2>Disadvantages of LOOCV</h2>
+<ul>
+<li>LOOCV can be computationally expensive. The model must be fit <span class="math inline">\(n\)</span> times.</li>
+<li>Cost of LOOCV = single-model fit <span class="math inline">\(CV_{(n)} = \frac{1}{n} \sum_{i=1}^{n} \left( \frac{y_i - \hat{y_i}}{1-h_i} \right)\)</span>
+<ul>
+<li>_i: ith fitted value from original least squares fit</li>
+<li>_i leverage defined in 3.37 in 99</li>
+</ul></li>
+<li>Leverage lies between <span class="math inline">\(\frac{1}{n}\)</span> and 1, reflecting how much each observation influences its own fit.</li>
+</ul>
+<aside class="notes">
+<p>The error rate here is similar to the ordinary MSE, but the ith residual is divided by 1-h. The residuals for high-leverage or highly influential points are inflated by the right amount and the equality holds. 5.2 cannot, however, be used for all types of predictive modelling, though LOOCV can be used for different types of predictive modelling. good for any kind fo predictive modeling</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="k-fold-cross-validation" class="slide level2 center" style="font-size: 0.6em;">
+<h2>K-fold Cross Validation</h2>
+<ul>
+<li>Randomly divide set of observations into “folds” of approximately equal size.
+<ul>
+<li>First fold becomes the validation set</li>
+<li>The remaining <span class="math inline">\(k-1\)</span> folds become the training set</li>
+</ul></li>
+<li>Repeat process <span class="math inline">\(k\)</span> times to obtain <span class="math inline">\(k\)</span> MSEs.</li>
+<li>Average MSE: <span class="math inline">\(CV_{(k)} = \frac{1}{k} \sum_{i=1}^{k} MSE_{i}\)</span>.</li>
+</ul>
+<div class="centre">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="fig5.5.png" style="width:60.0%" alt="K-fold cross-validation schematic"></p>
+<figcaption>K-fold Cross-Validation on ‘auto’ dataset. Observations 11, 76, and 5 in the first fold are used in the validation set, but later only in the training set. Observation 47 becomes part of the validation set in the fifth iteration.</figcaption>
+</figure>
+</div>
+</div>
+<aside class="notes">
+<p>Another alternative to LOOCV is k-fold cross-validation. In this approach, we’re dividing the set of observations into <span class="math inline">\(k\)</span> groups of <span class="math inline">\(folds\)</span>, of approximately equal size. The first fold is treated as validation set, and the method is fit on the remaining <span class="math inline">\(k-1\)</span> folds or sets. The MSE is calculated based on the validation set, or the held-out fold. We repeat this process <span class="math inline">\(k\)</span> times, as seen in the figure below. We can also see how the LOOCV is basically a special case of k-fold CV, but we’re using <span class="math inline">\(n\)</span> folds. K-fold CV is computationally less expensive in this regard. There’s also bias-variance trade-off, which Shrey will be going over later. - LOOCV is special case of k-fold CV where k is set to equal n. - Computational advantage</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="real-vs.-simulated-data" class="slide level2 center" style="font-size: 0.8em;">
+<h2>Real vs.&nbsp;Simulated Data</h2>
+<ul>
+<li>Use simulated data to see how well these methods capture the true MSE curves.</li>
+<li>In some cases, we may be more interested in the minimum point of the MSE curve.</li>
+<li>Because we care about the prediction error the most, will be focusing on the MSE in this case.</li>
+<li>The left panel shows the true data-generating function in black line</li>
+<li>The right panel will show MSE and flexibility (degrees of freedom)</li>
+</ul>
+<aside class="notes">
+<p>In the following slides, we’ll examine simulated datasets from different data-generating functions, one of which is linear and the other 2 are non-linear, and then compare how different validation methods affect the Mean-squared error of the test dataset.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="linear-data" class="slide level2 center" style="font-size: 0.8em;">
+<h2>Linear Data</h2>
+<ul>
+<li>MSE will increase as flexibility (i.e.&nbsp;degrees of freedom) increases</li>
+</ul>
+<div class="columns">
+<div class="column" style="width:50%;">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="fig2.10.png" style="width:65.0%" alt="Simulated linear data"></p>
+<figcaption>Simulated data is generated from a linear function, shown in black.</figcaption>
+</figure>
+</div>
+</div><div class="column" style="width:50%;">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="fig5.6lin.png" style="width:60.0%" alt="MSE comparison by cross-validation method against linear simulated data."></p>
+<figcaption>True and estimated test MSE for simulated datasets. True MSE is in blue, LOOCV estimate in black, and the k-fold CV where k=10 shown in orange</figcaption>
+</figure>
+</div>
+</div></div>
+<aside class="notes">
+<p>The left panel shows us Degress of freedom or flexibility are indicated in the x-axis.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="nonlinear-data" class="slide level2 center">
+<h2>Nonlinear Data</h2>
+<div class="columns">
+<div class="column" style="width:50%;">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="fig2.9.png" style="width:65.0%" alt="Nonlinear simulated data"></p>
+<figcaption>Simulated data is generated from a nonlinear function, shown in black.</figcaption>
+</figure>
+</div>
+</div><div class="column" style="width:50%;">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="fig5.6nonlin.png" style="width:65.0%" alt="MSE comparison by validation method for nonlinear simulated data"></p>
+<figcaption>True and estimated test MSE for simulated datasets. True MSE is in blue, LOOCV estimate in black, and the k-fold CV where k=10 shown in orange</figcaption>
+</figure>
+</div>
+</div></div>
+<aside class="notes">
+<p>Now, when we work with real data, we don’t know what the true MSE of the test set is. Therefore, it can be difficult to see how accurate each method is. Therefore, we might use simulated data and apply those techniques on simulated data to evaluate how accurate cross-validation methods are. In this the figure below, we’ve simulated data and plotted The true test MSE is displayed in blue, the black dash is the LOOCV and the orange is the 10-fold CV estimates.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="future-sections" class="slide level2 center">
+<h2>Future Sections</h2>
+<ul>
+<li>Shrinkage methods</li>
 </ul>
 </section>
-<section id="real-vs.-simulated-data" class="slide level2 center">
-<h2>Real vs.&nbsp;simulated data</h2>
-<ul>
-<li>real data, don’t know true test MSE so hard to see accuracy of cross validation estimate</li>
-<li>simulated data - compute true test MSE, evalute accuracy of cross-vaildaiotion</li>
-<li>Only intersted in location of minium point in estimtted test MSE curve,</li>
-<li>perfomring cross-validation on many learning methods, or single method wit hdifferent levels of flexibility to ID methods resulting in lowest test error</li>
-</ul>
+<section id="references" class="slide level2 center">
+<h2>References</h2>
 
 </section>
     </div>
@@ -409,7 +692,7 @@ Shrey Sati and Maggie Huang
         margin: 0.1,
 
         math: {
-          mathjax: 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js',
+          mathjax: 'https://cdn.jsdelivr.net/npm/mathjax@2.7.9/MathJax.js',
           config: 'TeX-AMS_HTML-full',
           tex2jax: {
             inlineMath: [['\\(','\\)']],
@@ -435,82 +718,6 @@ Shrey Sati and Maggie Huang
         ]
       });
     </script>
-    
-
-    <script>
-
-      // htmlwidgets need to know to resize themselves when slides are shown/hidden.
-
-      // Fire the "slideenter" event (handled by htmlwidgets.js) when the current
-
-      // slide changes (different for each slide format).
-
-      (function () {
-
-        // dispatch for htmlwidgets
-
-        function fireSlideEnter() {
-
-          const event = window.document.createEvent("Event");
-
-          event.initEvent("slideenter", true, true);
-
-          window.document.dispatchEvent(event);
-
-        }
-
-    
-
-        function fireSlideChanged(previousSlide, currentSlide) {
-
-          fireSlideEnter();
-
-    
-
-          // dispatch for shiny
-
-          if (window.jQuery) {
-
-            if (previousSlide) {
-
-              window.jQuery(previousSlide).trigger("hidden");
-
-            }
-
-            if (currentSlide) {
-
-              window.jQuery(currentSlide).trigger("shown");
-
-            }
-
-          }
-
-        }
-
-    
-
-        // hookup for slidy
-
-        if (window.w3c_slidy) {
-
-          window.w3c_slidy.add_observer(function (slide_num) {
-
-            // slide_num starts at position 1
-
-            fireSlideChanged(null, w3c_slidy.slides[slide_num - 1]);
-
-          });
-
-        }
-
-    
-
-      })();
-
-    </script>
-
-    
-
     <script id="quarto-html-after-body" type="application/javascript">
       window.document.addEventListener("DOMContentLoaded", function (event) {
         const tabsets =  window.document.querySelectorAll(".panel-tabset-tabby")
@@ -559,13 +766,14 @@ Shrey Sati and Maggie Huang
           e.clearSelection();
         }
         const getTextToCopy = function(trigger) {
-            const codeEl = trigger.previousElementSibling.cloneNode(true);
-            for (const childEl of codeEl.children) {
-              if (isCodeAnnotation(childEl)) {
-                childEl.remove();
-              }
+          const outerScaffold = trigger.parentElement.cloneNode(true);
+          const codeEl = outerScaffold.querySelector('code');
+          for (const childEl of codeEl.children) {
+            if (isCodeAnnotation(childEl)) {
+              childEl.remove();
             }
-            return codeEl.innerText;
+          }
+          return codeEl.innerText;
         }
         const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
           text: getTextToCopy

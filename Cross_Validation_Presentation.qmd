@@ -1,110 +1,96 @@
 ---
-title: "Resampling Methods: Cross-Validation"
+title: "Cross-Validation"
 subtitle: "ISLR, Chapter 5.1"
 author: "Shrey Sati and Maggie Huang"
 date: today
 date-format: long
 format: 
   revealjs:
-    theme: serif
+    theme: simple
     slide-number: true
     transition: slide
     transition-speed: fast
     center: true
 ---
 
-```{r, echo=FALSE, warning=FALSE, message=FALSE}
-############ Set-Up ################
-set.seed(2453)
-library(ISLR2)
-library(datasets)
-
-auto <- ISLR2::Auto
-?Auto
-fit <- lm(mpg ~ horsepower, data = auto)
-summary(fit)
-plot(fit)
-fit.2 <- lm(mpg ~horsepower^2, data=auto)
-
-```
-
-## Outline
+## Section 5.1
 
 1. The Validation Set Approach
 2. Leave-One-Out Cross-Validation (LOOCV)
 3. k-Fold Cross-Validation (k-fold CV)
 4. Bias-Variance Trade-Off for k-fold Cross-Validation
 5. Cross-Validation on Classification Problems
-6. Worksheet
 
 :::{.notes}
 Hello, today we will be talking about chapter 5.1, which is about cross-validation methods. I'll be going over the validation set approach, leave-one-out cross-validation, k-fold cross-validation. After, Shrey will follow up with bias-variance trade-off in k-fold cross-validation, cross-validation on classification problems, and the worksheet.
 :::
 
-## Set-UP
-
-- Auto dataset in ISLR library: gas mileage, horsepower, and 7 other variables for 392 vehicles.
-- mpg: miles per gallon
-- horsepower: engine horsepower
-- lm(mpg ~ horsepower)
-- lm(mpg~horsepower^2)
-
-$$y_{mpg} = \beta_0 + \beta_{horsepower}x$$
-$$y_{mpg} = \beta_0 + \beta_{horsepower}^2 x$$
-
-```{r}
-
-```
-
-
-:::{.notes}
-For the first three topics, we'll be using the Auto dataset from the ISLR library in R, which records 9 variables like miles per gallon, horsepower, weight, and year for 392 vehicles.  
-:::
-
 ## The Problem
 
-- We use all 392 observations to fit our model
-- Chapter 2: Training error rate is available, but test error rate may not be available
-- Is it ready to deploy in real life?
-- What can we do without a test set?
-- Cross-validation
+- From previous chapters, we learned how to fit linear and logistic regression models to training data and methods to select an appropriate model
+- Minimizing the training error rate does not mean the model will perform well against new data
+- Cross validation: hold out a part of the training data as a validation set
+  - Use MSE to quantify how well the model generalizes to new data
+  - Compare models 
 
 :::{.notes}
-In particular, we've fitted a linear model with miles per gallon as the response variable and horsepower as the predictor. We've used all 392 observations from our dataset, and our polynomial model is optimal. However, does this mean it's ready to be deployed in real life? Before we do that, we might want to test this model using test data and compare the training and test error rates, as seen in Chapter 2. However, what if we don't have a test dataset? How can we evaluate the model? We can use cross-validation comes in. Rather than finding a new dataset to test against, we can take our training data and split it in such a way that part of that becomes our test set. That is, we will hold out a subset of the data to test against.
+From previous sections, we learned how to fit linear and logistic regression models to training data and methods to select an appropriate model. In particular, we looked at things like reducing the mean squared error, or the difference between the observations in the training data and the predictions made by the model and increasing adjusted R^2 to capture as much variance in the data without overfitting. In doing so, we've minimized the error in our training dataset. However, this does not mean the model will perform well in new situations. When fitting the model, we have full access to the data, we can tweak our model to get the best metrics (adjusted R^2, AIC, BIC, MSE, etc.). However, we would not know how the model could perform against new data, which the model hasn't accounted for. Can the model capture the true trends in a data-generating process, or is it just optimized solely for the training data? Before we deploy a model in real life, it would help to have a test set available. If one is not available, we can create one by holding out a part of the training data to use as a validation set--that's the essence of cross-validation.
 :::
 
-## Validation Set Approach
 
-- One-time process where we divide the available dataset into 2 parts:
-- Training set: Fit the model with this data
-- Validation set/hold-out set: Test the fitted model. The model predicts responses for observations in the test set.
-- Evaluate the MSE of the model against the test set $\rightarrow$ lower MSE = better. Get the test error rate.
+## Example Set-Up {style="font-size: 0.7em;"}
 
-![](fig5.1.png){fig-alt="Dataset is split into training and hold-out sets. Observations 7, 22, and 13 are in the training set in blue; observation 91 is in the validation set"}
+:::{.columns}
+:::{.column width="50%"}
+- `Auto` dataset in `ISLR` library: gas mileage, horsepower, and 7 other variables for 392 vehicles.
+- Response variable: miles per gallon (mpg)
+- Predictor: engine horsepower
+- Focus on minimizing the test error, or $MSE: \sum_{i=1}^{n} (y_i - \hat{y}_i)^2$
+- Models:
+
+1. $y = \beta_0 + \beta_1x + \epsilon$
+2. $y = \beta_0 + \beta_1 x + \beta_2 x^2 + \epsilon$
+$\vdots$
+10. $y = \beta_0 + \beta_1 x + \beta_2 x^2 + ... + \beta_{10} x^{10} + \epsilon$
+:::
+:::{.column width = "50%"}
+:::{.centre}
+![`Auto` data with `mpg` and `horsepower` plotted. Three different linear regression fits have been overlaid onto the data.](fig3.8.png){fig-alt="Auto dataset" width="80%"}
+:::
+:::
+:::
 
 :::{.notes}
-In the validation set approach, we randomly split the available data once into 2 sets: our training data, which we use to fit the model, and our test or hold-out dataset. A schematic is presented here, where blue indicates the training dataset and orange the testing dataset. We use our fitted model to predict the observations in the test dataset, then compare the error, or MSE to assess the accuracy of the model. We want to minimize the MSE.
+In the following methods and examples, we're using the Auto dataset from the ISLR library. This dataset tracks 9 different variables for 392 vehicles. For simplicity, we're only focusing on miles per gallon, which is the response variable, and horsepower, which is the predictor. As the dataset is nonlinear, we'll also be looking at models which include all polynomial terms up to degree 10.
 :::
 
-## Percentage of Training vs. Holdout Datasets
 
-- In undergraduate courses, we were taught to split dataset 70/30 for training/testing, respectively
-- 
+## Validation Set Approach {style="font-size: 0.8em;"}
+
+- One-time process where we divide the available dataset into two parts:
+  - Training set
+  - Validation set or Hold-out set
+- The percentage of data to allocate for training versus validation sets can vary
+
+:::{.centre}
+![Dataset is split into training and hold-out sets. Observations 7, 22, and 13 are in the training set in blue; observation 91 is in the validation set](fig5.1.png){fig-alt="Validation Set Schematic" width="80%"}
+:::
+
+
 
 :::{.notes}
-In previous courses like STA302, we might have been taught to split the dataset such that 70% is used for training dataset for which the model is fitted against, and 30% of the data is for testing the model.
+In the validation set approach, we randomly split the available data once into 2 sets: our training data, which we use to fit the model, and our test or hold-out dataset. The percentage of how much to allocate to the training vs. test dataset can vary. For example, in undergraduate statistics courses, you might have been taught to do a 70/30 or 80/20 split, where a majority of data is used for training and we hold out a smaller percentage as the validation set, though these rules can vary depending on how much data you have to work with. A schematic is presented here, where blue indicates the training dataset and orange the testing dataset. We use our fitted model to predict the observations in the test dataset, then compare the error, or MSE to assess the accuracy of the model. We want to minimize the MSE.
 :::
 
-## Comparison of Models MSEs
 
-$ MSE = \sum_{i=1}^{n} (y_i - \hat{y}_i)$
+## Disadvantages of the Validation Set Approach {style="font-size: 0.7em;"}
 
-Major Drawbacks:
-1. Validation estimates of MSE can vary depending on which datapoints end up in the training vs. test sets
+- MSE can vary depending on which data points end up in the training versus validation sets
+- The full dataset is not used to fit the model, so the test MSE may be overestimated
 
-2. The full dataset is not used to fit the model, so validation set error rate my be overestimated for the model fit on the entire dataset.
-
-![](fig5.2.png){fig-alt="Estimating MSE from predicting mpg using polynomial functions of the predictor"}
+:::{.centre}
+![Comparing MSE from one versus many runs using the validation set approach, where MPG is modelled with polynomial terms of the predictor, engine horsepower](fig5.2.png){fig-alt="MSE of model over different runs" width="80%"}
+:::
 
 :::{.notes}
 However, there are two major drawbacks to this approach, which can be seen in Figure 2 below.  The first one is that the MSE can vary depending on how the data is split. The graph on the left shows MSE on the y-axis, and the x-axis shows the degree of the polynomial that was fitted and used against the test data set: for example, horsepower^2, cubed, etc., all the way until a power of 10. If we were to just follow the regular steps, where the data is split once, we might observe something like on the left, where polynomial of degree 2 decreases the MSE substantially and overall leads to better predictions, while higher polynomials don't necessarily improve the model accuracy by much.
@@ -116,80 +102,108 @@ The second concern is that the MSE might be overestimated. Splitting the dataset
 So overall, while it's one approach, it's not ideal. Are there other alternatives?
 :::
 
-## Leave-One-Out Cross-Validation
+## Leave-One-Out Cross-Validation {style="font-size: 0.8em;"}
 
-- Test set has 1 observation: $(x_1, y_1)$.
-- Training set has $n-1$ observations: ${(x_2, y_2), (x_3, y_3),...,(x_n, y_n)}$
-- $MSE_1 = (y_1 - \hat{y}_1)$
-- Repeat $n$ times for $n$ MSEs.
+- Divide the dataset into 2 parts:
+  - Test set has 1 observation: $(x_1, y_1)$.
+  - Training set has $n-1$ observations: ${(x_2, y_2), (x_3, y_3),...,(x_n, y_n)}$.
+- Calculate $MSE_1 = (y_1 - \hat{y}_1)^2$. Repeat $n$ times for $n$ MSEs.
+- $CV_{(n)} = \frac{1}{n} \sum_{i=1}^{n} MSE_{i}$
 
-$CV_{(n)} = \frac{1}{n} \sum_{i=1}^{n} MSE_{i}$
-
-![](fig5.3.png){fig-alt="Schematic"}
+![In each iteration, a different data point is chosen to be in the validation set, shown in orange. The training set is shown in blue.](fig5.3.png){fig-alt="Schematic of LOOCV" width="70%"}
 
 :::{.notes}
 This is where leave-one-out cross-validation comes in. This time, we split the dataset such that the training set consists of n-1 observations, while the test set only has 1 observation. A schematic of what this might look like. We can then obtain the mean squared error for that one point, which in this case is x1, y1. Repeating this n times and taking their average, we'll obtain the LOOCV estimate for the test MSE. In each iteration, the test data point is not used in the fitting process, so we get an approximately unbiased test error estimate.
 :::
 
-## LOOCV advantages over Validation Set
-- Less bias
-- Less likely to overestimate the test error rate
-- Performing LOOCV multiple times does not drastically change results
+## Advantages of LOOCV Over the Validation Set Method {style="font-size: 0.8em;"}
+- Less bias and less likely to overestimate the test error rate
+- Performing LOOCV multiple times does not drastically change estimated MSEs
 
-![](fig5.4.png){fig-alt="Cross-Validation on Auto dataset"}
+![The left plot shows us the test error when running LOOCV once. The second shows us MSE curves over 10 iterations. Unlike the validation set approach, MSEs remain relatively consistent over each run. ](fig5.4.png){fig-alt="Cross-Validation on Auto dataset" width="100%"}
 
 :::{.notes}
 The biggest advantages to this approach compared to the validation set are that it reduces bias and it is less likely to overestimate the MSE since we're using n-1 observations or most of the dataset to fit the model. This can be seen in the figure below. The left graph shows what we might see if we were to just apply LOOCV. The right graph does multiple simulations of LOOCV, and unlike the validation method, we can see that even across different runs, the MSE does vary, but it's a lot less compared to the validation method.
 :::
 
-## However...
--LOOCV can be computationally expensive. The model must be fit $n$ times.
+## Disadvantages of LOOCV {style="font-size: 0.8em;"}
+- LOOCV can be computationally expensive. The model must be fit $n$ times.
 - Cost of LOOCV = single-model fit
 $CV_{(n)} = \frac{1}{n} \sum_{i=1}^{n} \left( \frac{y_i - \hat{y_i}}{1-h_i} \right)$
-- \hat{y}_i: ith fitted value from original least squares fit
-- \hat{h}_i leverage defined in 3.37 in 99
-- leverage lies between $\frac{1}{n}$ and 1, reflecting amount observation influences its own fit.
-- good for any kind fo predictive modeling
+  - \hat{y}_i: ith fitted value from original least squares fit
+  - \hat{h}_i leverage defined in 3.37 in 99
+- Leverage lies between $\frac{1}{n}$ and 1, reflecting how much each observation influences its own fit.
 
 :::{.notes}
 The error rate here is similar to the ordinary MSE, but the ith residual is divided by 1-h. The residuals for high-leverage or highly influential points are inflated by the right amount and the equality holds. 5.2 cannot, however, be used for all types of predictive modelling, though LOOCV can be used for different types of predictive modelling.
+good for any kind fo predictive modeling
 :::
 
-## k-fold Cross Validation
+## K-fold Cross Validation {style="font-size: 0.6em;"}
+- Randomly divide set of observations into "folds" of approximately equal size. 
+  - First fold becomes the validation set
+  - The remaining $k-1$ folds become the training set
+- Repeat process $k$ times to obtain $k$ MSEs.
+- Average MSE: $CV_{(k)} = \frac{1}{k} \sum_{i=1}^{k} MSE_{i}$.
 
-- Alternative to LOOCV is k-fold CV
-- Randomly divide set of observations into "folds" of equal size. 
-- The first told is treated as a validation set
-- Statistical method is applied on remaining $k-1$ folds. 
-- $MSE_1$ computed on observations on the held out fold.
-- Repeat process k times
-- Each time, different group of obs treated as validation set
-- k estimates of test error
-- average MSEs
-
-$CV_{(k)} = \frac{1}{k} \sum_{i=1}^{k} MSE_{i}$
-
-- LOOCV is special case of k-fold CV where k is set to equal n.
-- Computational advantage
-
-![](fig5.5.png){fig-alt="k-fold Cross-Validation on Auto dataset. Observations 11, 76, and 5 in the first fold are used in the validation set, but later only in the training set. Observation 47 becomes part of the validation set in the fifth iteration."}
+:::{.centre}
+![K-fold Cross-Validation on 'auto' dataset. Observations 11, 76, and 5 in the first fold are used in the validation set, but later only in the training set. Observation 47 becomes part of the validation set in the fifth iteration.](fig5.5.png){fig-alt="K-fold cross-validation schematic" width="60%"}
+:::
 
 :::{.notes}
 Another alternative to LOOCV is k-fold cross-validation. In this approach, we're dividing the set of observations into $k$ groups of $folds$, of approximately equal size. The first fold is treated as validation set, and the method is fit on the remaining $k-1$ folds or sets. The MSE is calculated based on the validation set, or the held-out fold. We repeat this process $k$ times, as seen in the figure below. We can also see how the LOOCV is basically a special case of k-fold CV, but we're using $n$ folds. K-fold CV is computationally less expensive in this regard. There's also bias-variance trade-off, which Shrey will be going over later.
+- LOOCV is special case of k-fold CV where k is set to equal n.
+- Computational advantage
 :::
 
-## Real vs. Simulated Data
+## Real vs. Simulated Data {style="font-size: 0.8em;"}
 - Use simulated data to see how well these methods capture the true MSE curves.
 - In some cases, we may be more interested in the minimum point of the MSE curve.
+- Because we care about the prediction error the most, will be focusing on the MSE in this case.
+- The left panel shows the true data-generating function in black line
+- The right panel will show MSE and flexibility (degrees of freedom)
 
-![](fig5.6.png){fig-alt="True and estimated test MSE for simulated datasets. True MSE is in blue, LOOCV estimate in black, and the k-fold CV where k=10 shown in orange"}
+:::{.notes}
+In the following slides, we'll examine simulated datasets from different data-generating functions, one of which is linear and the other 2 are non-linear, and then compare how different validation methods affect the Mean-squared error of the test dataset.
+:::
+
+## Linear Data {style="font-size: 0.8em;"}
+
+- MSE will increase as flexibility (i.e. degrees of freedom) increases
+
+
+:::{.columns}
+:::{.column width="50%"}
+![Simulated data is generated from a linear function, shown in black.](fig2.10.png){fig-alt="Simulated linear data" width="65%"}
+:::
+:::{.column width="50%"}
+![True and estimated test MSE for simulated datasets. True MSE is in blue, LOOCV estimate in black, and the k-fold CV where k=10 shown in orange](fig5.6lin.png){fig-alt="MSE comparison by cross-validation method against linear simulated data." width="60%"}
+:::
+:::
+
+:::{.notes}
+The left panel shows us 
+Degress of freedom or flexibility are indicated in the x-axis.
+:::
+
+## Nonlinear Data
+
+:::{.columns}
+:::{.column width="50%"}
+![Simulated data is generated from a nonlinear function, shown in black.](fig2.9.png){fig-alt="Nonlinear simulated data" width="65%"}
+:::
+:::{.column width="50%"}
+![True and estimated test MSE for simulated datasets. True MSE is in blue, LOOCV estimate in black, and the k-fold CV where k=10 shown in orange](fig5.6nonlin.png){fig-alt="MSE comparison by validation method for nonlinear simulated data" width="65%"}
+:::
+:::
 
 :::{.notes}
 Now, when we work with real data, we don't know what the true MSE of the test set is. Therefore, it can be difficult to see how accurate each method is. Therefore, we might use simulated data and apply those techniques on simulated data to evaluate how accurate cross-validation methods are. In this the figure below, we've simulated data and plotted 
 The true test MSE is displayed in blue, the black dash is the LOOCV and the orange is the 10-fold CV estimates.
 :::
 
-## What's Coming Next?
+## Future Sections
 - Shrinkage methods
 
+## References
 
