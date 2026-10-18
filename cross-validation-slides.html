@@ -10,7 +10,7 @@
   <meta name="generator" content="quarto-1.10.18">
 
   <meta name="author" content="Shrey Sati and Maggie Huang">
-  <meta name="dcterms.date" content="2026-10-17">
+  <meta name="dcterms.date" content="2026-10-18">
   <title>Cross-Validation</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -145,7 +145,7 @@ Shrey Sati and Maggie Huang
 </div>
 </div>
 
-  <p class="date">October 17, 2026</p>
+  <p class="date">October 18, 2026</p>
 </section>
 <section id="section-5.1" class="slide level2 center">
 <h2>Section 5.1</h2>
@@ -418,8 +418,7 @@ Shrey Sati and Maggie Huang
 <li><span class="math inline">\(\hat{y}_i\)</span>: <span class="math inline">\(i\)</span>th fitted value from the <em>original</em> least squares fit on all <span class="math inline">\(n\)</span> observations</li>
 <li><span class="math inline">\(h_i\)</span>: leverage of observation <span class="math inline">\(i\)</span>, between <span class="math inline">\(\frac{1}{n}\)</span> and 1. It reflects how much an observation influences its own fit</li>
 <li>Simple linear regression: <span class="math inline">\(h_i = \frac{1}{n} + \frac{(x_i - \bar{x})^2}{\sum_{i'=1}^{n} (x_{i'} - \bar{x})^2}\)</span></li>
-<li>Gives exactly the same estimate as equation 5.1</li>
-<li>Does not hold in general (e.g.&nbsp;logistic regression): refit <span class="math inline">\(n\)</span> times</li>
+<li>Gives exactly the same estimate as <span class="math inline">\(CV_{(n)} = \frac{1}{n} \sum_{i=1}^{n} \hat{MSE}_{Test}^{(i)}\)</span></li>
 </ul>
 <aside class="notes">
 <ul>
