@@ -10,7 +10,7 @@
   <meta name="generator" content="quarto-1.10.18">
 
   <meta name="author" content="Shrey Sati and Maggie Huang">
-  <meta name="dcterms.date" content="2026-10-17">
+  <meta name="dcterms.date" content="2026-10-18">
   <title>Cross-Validation</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -145,7 +145,7 @@ Shrey Sati and Maggie Huang
 </div>
 </div>
 
-  <p class="date">October 17, 2026</p>
+  <p class="date">October 18, 2026</p>
 </section>
 <section id="section-5.1" class="slide level2 center">
 <h2>Section 5.1</h2>
@@ -418,8 +418,7 @@ Shrey Sati and Maggie Huang
 <li><span class="math inline">\(\hat{y}_i\)</span>: <span class="math inline">\(i\)</span>th fitted value from the <em>original</em> least squares fit on all <span class="math inline">\(n\)</span> observations</li>
 <li><span class="math inline">\(h_i\)</span>: leverage of observation <span class="math inline">\(i\)</span>, between <span class="math inline">\(\frac{1}{n}\)</span> and 1. It reflects how much an observation influences its own fit</li>
 <li>Simple linear regression: <span class="math inline">\(h_i = \frac{1}{n} + \frac{(x_i - \bar{x})^2}{\sum_{i'=1}^{n} (x_{i'} - \bar{x})^2}\)</span></li>
-<li>Gives exactly the same estimate as equation 5.1</li>
-<li>Does not hold in general (e.g.&nbsp;logistic regression): refit <span class="math inline">\(n\)</span> times</li>
+<li>Gives exactly the same estimate as <span class="math inline">\(CV_{(n)} = \frac{1}{n} \sum_{i=1}^{n} \hat{MSE}_{Test}^{(i)}\)</span></li>
 </ul>
 <aside class="notes">
 <ul>
@@ -535,15 +534,302 @@ Shrey Sati and Maggie Huang
           display:block!important;
       }</style></aside>
 </section>
-<section id="up-next" class="slide level2 center" style="font-size: 0.9em;">
-<h2>Up Next</h2>
+<section id="bias-variance-trade-off-for-k-fold-cross-validation-bias" class="slide level2 center" style="font-size: 0.7em;">
+<h2>Bias-Variance Trade-Off for k-Fold Cross-Validation: Bias</h2>
 <ul>
-<li>Shrinkage methods</li>
+<li>k-Fold CV is cheaper than LOOCV (<span class="math inline">\(k\)</span> fits instead of <span class="math inline">\(n\)</span>)</li>
+<li>A second, potentially more important advantage: k-fold CV often gives <strong>more accurate</strong> estimates of test error</li>
+<li>From Chapter 2.2.2: a good estimate needs low bias <em>and</em> low variance. That trade-off applies to our estimate of test error too</li>
+<li><strong>Bias</strong> comes from training set size. Each k-fold fit uses <span class="math inline">\(\frac{(k-1)n}{k}\)</span> observations</li>
+</ul>
+<table class="caption-top">
+<colgroup>
+<col style="width: 30%">
+<col style="width: 38%">
+<col style="width: 30%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Method (<code>Auto</code>, <span class="math inline">\(n = 392\)</span>)</th>
+<th style="text-align: center;">Observations per fit</th>
+<th style="text-align: left;">Bias of the test error estimate</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Validation set</td>
+<td style="text-align: center;"><span class="math inline">\(\approx n/2 = 196\)</span></td>
+<td style="text-align: left;">High (overestimates)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">5-fold CV</td>
+<td style="text-align: center;"><span class="math inline">\(4n/5 \approx 314\)</span></td>
+<td style="text-align: left;">Intermediate</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">10-fold CV</td>
+<td style="text-align: center;"><span class="math inline">\(9n/10 \approx 353\)</span></td>
+<td style="text-align: left;">Intermediate</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">LOOCV</td>
+<td style="text-align: center;"><span class="math inline">\(n - 1 = 391\)</span></td>
+<td style="text-align: left;">Approximately unbiased</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>Looking only at bias, LOOCV is the winner</li>
 </ul>
 <aside class="notes">
 <ul>
-<li>Shrey is next: bias-variance trade-off for k-fold CV (why 5 or 10), and CV for classification</li>
-<li>Then the next group: shrinkage methods</li>
+<li>Maggie showed k-fold is cheaper. Putting computation aside, there’s a second reason to prefer k-fold CV</li>
+<li>Link back to 2.2.2: there, bias and variance describe the fitted model (f-hat). Variance = how much f-hat would change with a different training set; bias = error from using a too-simple model</li>
+<li>In 5.1.4 the book applies the same ideas to the CV estimate: bias = does it systematically over/underestimate test error; variance = how much it would change on a different dataset</li>
+<li>Bias logic is the same as Maggie’s validation set drawback: fewer training observations means worse fits, so we overestimate test error</li>
+<li><strong>Walk through the table</strong>: more observations per fit, less bias</li>
+<li>So if bias were all that mattered, we’d always use LOOCV. But it isn’t (next slide)</li>
+</ul>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="variance-how-loocvs-estimate-behaves-across-datasets" class="slide level2 center" style="font-size: 0.7em;">
+<h2>Variance: How LOOCV’s Estimate Behaves Across Datasets</h2>
+<ul>
+<li><strong>Question:</strong> LOOCV gives the same test error estimate every time we run it on the same data. Can its estimate still have high variance?</li>
+</ul>
+<div class="fragment">
+<ul>
+<li>Yes. “Same estimate every run” is about <strong>one</strong> dataset. Variance asks: if we drew a <strong>new dataset</strong> from the same population, how much would the estimate change?</li>
+<li>Every CV estimate is an <strong>average</strong> of per-fold test errors
+<ul>
+<li>LOOCV: <span class="math inline">\(n\)</span> models trained on almost identical data, so their errors are <strong>highly correlated</strong></li>
+<li>k-fold: <span class="math inline">\(k\)</span> models whose training sets overlap less, so their errors are less correlated</li>
+</ul></li>
+<li>The mean of highly correlated quantities has higher variance, so LOOCV’s estimate changes more from dataset to dataset</li>
+</ul>
+<table class="caption-top">
+<colgroup>
+<col style="width: 21%">
+<col style="width: 26%">
+<col style="width: 26%">
+<col style="width: 26%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;"></th>
+<th style="text-align: center;">LOOCV</th>
+<th style="text-align: center;">10-fold</th>
+<th style="text-align: center;">5-fold</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Training set overlap (<code>Auto</code>)</td>
+<td style="text-align: center;">390 of 391 (99.7%)</td>
+<td style="text-align: center;">8 of 9 folds (≈ 89%)</td>
+<td style="text-align: center;">3 of 4 folds (75%)</td>
+</tr>
+</tbody>
+</table>
+</div>
+<aside class="notes">
+<ul>
+<li>ASK QUESTION, then advance to reveal the rest of the slide</li>
+<li>Key idea: LOOCV has no randomness within one dataset, but its estimate can still change a lot across different datasets</li>
+<li>LOOCV’s n models are almost identical, so their errors rise and fall together, and averaging doesn’t cancel them out</li>
+<li>Overlap table: LOOCV training sets differ by just one observation. 10-fold training sets share 8 of 9 folds; 5-fold share 3 of 4</li>
+<li>IF ASKED “is this always true?”: the book only says LOOCV tends to have higher variance, but it’s not a guarantee, just a general tendency</li>
+</ul>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="the-verdict-k-5-or-k-10" class="slide level2 center" style="font-size: 0.8em;">
+<h2>The Verdict: <span class="math inline">\(k = 5\)</span> or <span class="math inline">\(k = 10\)</span></h2>
+<table class="caption-top">
+<colgroup>
+<col style="width: 18%">
+<col style="width: 22%">
+<col style="width: 28%">
+<col style="width: 32%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;"></th>
+<th style="text-align: center;">Validation set</th>
+<th style="text-align: center;">k-fold (<span class="math inline">\(k = 5, 10\)</span>)</th>
+<th style="text-align: center;">LOOCV</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Bias</td>
+<td style="text-align: center;">High</td>
+<td style="text-align: center;">Intermediate</td>
+<td style="text-align: center;">Approximately unbiased</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Variance</td>
+<td style="text-align: center;">High</td>
+<td style="text-align: center;">Lower</td>
+<td style="text-align: center;">Higher</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Model fits</td>
+<td style="text-align: center;">1</td>
+<td style="text-align: center;"><span class="math inline">\(k\)</span></td>
+<td style="text-align: center;"><span class="math inline">\(n\)</span> (1 for least squares)</td>
+</tr>
+</tbody>
+</table>
+<p><br></p>
+<ul>
+<li><span class="math inline">\(k = 5\)</span> or <span class="math inline">\(10\)</span> have been shown <strong>empirically</strong> to give test error estimates with neither excessively high bias nor very high variance</li>
+<li><strong>Coming up (Section 6.2):</strong> ridge regression faces the same trade-off. Increasing its tuning parameter <span class="math inline">\(\lambda\)</span> makes the fit less flexible: lower variance, higher bias</li>
+</ul>
+<aside class="notes">
+<ul>
+<li>k-fold accepts a little more bias in exchange for lower variance</li>
+<li>Link to next group: in ridge regression, λ controls flexibility. Bigger λ = less flexible = lower variance but higher bias. Same balancing act as choosing k</li>
+<li>If asked: here the trade-off is about the model’s predictions (like Chapter 2), while for k-fold it was about the CV estimate. Same idea, different object</li>
+</ul>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="cross-validation-on-classification-problems" class="slide level2 center" style="font-size: 0.7em;">
+<h2>Cross-Validation on Classification Problems</h2>
+<ul>
+<li>So far: quantitative response, test error measured with MSE</li>
+<li>Qualitative response: same procedure, but we count <strong>misclassified observations</strong> instead</li>
+<li><strong>LOOCV error rate</strong>:</li>
+</ul>
+<p><span class="math display">\[CV_{(n)} = \frac{1}{n} \sum_{i=1}^{n} Err_i, \qquad Err_i = I(y_i \neq \hat{y}_i)\]</span></p>
+<ul>
+<li>k-fold and validation set error rates are defined analogously</li>
+<li><strong>Example</strong>: logistic regression with polynomial terms of the predictors, e.g.&nbsp;degree 2:</li>
+</ul>
+<p><span class="math display">\[\log\left(\frac{p}{1-p}\right) = \beta_0 + \beta_1 X_1 + \beta_2 X_1^2 + \beta_3 X_2 + \beta_4 X_2^2\]</span></p>
+<aside class="notes">
+<ul>
+<li>So far everything used MSE, so a quantitative response. CV works just as well for a qualitative response</li>
+<li>Only change: count mistakes instead of squared error. I() is the indicator function: 1 if we misclassify observation i, 0 if we get it right</li>
+<li>Link back to the Chapter 4.3 presentation: logistic regression. Adding squared terms of the predictors (just like we did with horsepower) bends the decision boundary</li>
+</ul>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="logistic-regression-degrees-1-to-4" class="slide level2 center" style="font-size: 0.7em;">
+<h2>Logistic Regression: Degrees 1 to 4</h2>
+<div class="columns">
+<div class="column" style="width:55%;">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="fig5.7.png" alt="Logistic regression decision boundaries for polynomial degrees 1 to 4"></p>
+<figcaption>Bayes decision boundary: purple dashed. Logistic regression boundaries: black.</figcaption>
+</figure>
+</div>
+</div><div class="column" style="width:45%;">
+<table class="caption-top">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Model</th>
+<th style="text-align: center;">Test error rate</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Degree 1</td>
+<td style="text-align: center;">0.201</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Degree 2</td>
+<td style="text-align: center;">0.197</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Degree 3</td>
+<td style="text-align: center;">0.160</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Degree 4</td>
+<td style="text-align: center;">0.162</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Bayes (best possible)</td>
+<td style="text-align: center;">0.133</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>Simulated data, so we know the true test error</li>
+<li>On real data we don’t, so we use CV (next slide)</li>
+</ul>
+</div></div>
+<aside class="notes">
+<ul>
+<li>Simulated data, so we know the true test error and the Bayes boundary (best possible)</li>
+<li>Degree 1 (linear) misses the curve: 0.201. Degree 2 barely helps: 0.197. Degree 3 drops to 0.160. Degree 4 goes slightly back up: 0.162</li>
+<li>On real data we wouldn’t know these numbers. That’s where CV comes in (next slide)</li>
+</ul>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="using-10-fold-cv-to-choose-flexibility" class="slide level2 center" style="font-size: 0.75em;">
+<h2>Using 10-Fold CV to Choose Flexibility</h2>
+
+<img data-src="fig5.8.png" alt="Training, test, and 10-fold CV error rates for logistic regression and KNN" class="r-stretch quarto-figure-center"><p class="caption">Test error (orange), training error (blue), 10-fold CV error (black). Left: logistic regression. Right: KNN.</p><ul>
+<li>Training error keeps falling, so it always picks the most flexible model. CV tracks the U-shaped test error and lands close to the best flexibility</li>
+</ul>
+<aside class="notes">
+<ul>
+<li>Training error (blue) mostly keeps going down as we add flexibility, so it can’t be used to choose. Test error (orange) is U-shaped</li>
+<li>Left: CV bottoms out at degree 4; true best is degree 3. Degrees 3 to 6 are nearly tied on test error, so picking 4 is fine</li>
+<li>Right: KNN. K here is the <strong>NUMBER OF NEIGHBOURS</strong>, not folds. x-axis is 1/K, so more flexible to the right</li>
+<li>CV slightly underestimates the error rate but finds approx. the right flexibility</li>
 </ul>
 <style type="text/css">
         span.MJX_Assistive_MathML {
