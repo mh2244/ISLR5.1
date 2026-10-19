@@ -119,7 +119,7 @@ $\vdots$
 ## Disadvantages of the Validation Set Approach {style="font-size: 0.7em;"}
 
 - **High variability**: the estimate depends on which observations land in the training vs. validation set
-- **Overestimates test MSE**: only part of the data (about half) is used to fit the model, and models tend to do worse with fewer observations
+- **Overestimates test MSE**: only part of the data (half) is used to fit the model, and models tend to do worse with fewer observations
 
 ![Left: validation MSE for one random split. Right: ten different random splits. MPG is modelled with polynomial terms of horsepower, degrees 1 to 10.](fig5.2.png){fig-alt="MSE of model over different runs" width="80%"}
 
@@ -189,7 +189,7 @@ $$CV_{(n)} = \frac{1}{n} \sum_{i=1}^{n} \left( \frac{y_i - \hat{y}_i}{1-h_i} \ri
 
 :::{.notes}
 - Only for least squares linear or polynomial regression
-- Fit the model once on all n observations. Take each ordinary residual, divide by (1 - h_i), square, average
+- Fit the model once on all n observations. Take each ordinary residual, divide by (1 - h_i), square, average. We fit the model once on all the data, take each residual, divide it by 1 minus its leverage, square, and average. That matches the LOOCV estimate exactly, at the cost of one fit.
 - Same result as n separate refits
 - Note: y-hat means something different here. In equation 5.1 it is the prediction from a model fit *without* observation i. Here it is the fitted value from the one full fit, which did include observation i
 - Why divide by 1 - h_i? Ordinary residual is too small because the point helped determine its own fit. High-leverage points get inflated the most
