@@ -250,94 +250,48 @@ $$CV_{(n)} = \frac{1}{n} \sum_{i=1}^{n} \left( \frac{y_i - \hat{y}_i}{1-h_i} \ri
 - If asked what flexibility means: how wiggly the fitted curve is; details in Chapter 2
 :::
 
-## Bias-Variance Trade-Off for k-Fold Cross-Validation: Bias {style="font-size: 0.7em;"}
+## Bias-Variance Trade-Off for k-Fold CV {style="font-size: 0.7em;"}
 
-- k-Fold CV is cheaper than LOOCV ($k$ fits instead of $n$)
-- A second, potentially more important advantage: k-fold CV often gives **more accurate** estimates of test error
-- From Chapter 2.2.2: a good estimate needs low bias *and* low variance. That trade-off applies to our estimate of test error too
-- **Bias** comes from training set size. Each k-fold fit uses $\frac{(k-1)n}{k}$ observations
+- Besides being cheaper, k-fold CV is often **more accurate** than LOOCV
+- **Question:** LOOCV gives the same estimate every run on the same data. Can it still have high variance?
 
-| Method (`Auto`, $n = 392$) | Observations per fit | Bias of the test error estimate |
-|:---|:---:|:---|
-| Validation set | $\approx n/2 = 196$ | High (overestimates) |
-| 5-fold CV | $4n/5 \approx 314$ | Intermediate |
-| 10-fold CV | $9n/10 \approx 353$ | Intermediate |
-| LOOCV | $n - 1 = 391$ | Approximately unbiased |
+::: {.fragment}
+- Yes. Variance is about a **new dataset**. LOOCV's $n$ models train on almost the same data, so their errors are highly correlated and don't cancel out
 
-- Looking only at bias, LOOCV is the winner
-
-:::{.notes}
-- Maggie showed k-fold is cheaper. Putting computation aside, there's a second reason to prefer k-fold CV
-- Link back to 2.2.2: there, bias and variance describe the fitted model (f-hat). Variance = how much f-hat would change with a different training set; bias = error from using a too-simple model
-- In 5.1.4 the book applies the same ideas to the CV estimate: bias = does it systematically over/underestimate test error; variance = how much it would change on a different dataset
-- Bias logic is the same as Maggie's validation set drawback: fewer training observations means worse fits, so we overestimate test error
-- **Walk through the table**: more observations per fit, less bias
-- So if bias were all that mattered, we'd always use LOOCV. But it isn't!!!! (next slide)
-:::
-
-## Variance: How LOOCV's Estimate Behaves Across Datasets {style="font-size: 0.7em;"}
-
-- **Question:** LOOCV gives the same test error estimate every time we run it on the same data. Can its estimate still have high variance?
-
-:::: {.fragment}
-- Yes. "Same estimate every run" is about **one** dataset. Variance asks: if we drew a **new dataset** from the same population, how much would the estimate change?
-- Every CV estimate is an **average** of per-fold test errors
-  - LOOCV: $n$ models trained on almost identical data, so their errors are **highly correlated**
-  - k-fold: $k$ models whose training sets overlap less, so their errors are less correlated
-- The mean of highly correlated quantities has higher variance, so LOOCV's estimate changes more from dataset to dataset
-
-|  | LOOCV | 10-fold | 5-fold |
+| `Auto` ($n = 392$) | Validation set | k-fold $(k = 5, 10)$ | LOOCV |
 |:---|:---:|:---:|:---:|
-| Training set overlap (`Auto`) | 390 of 391 (99.7%) | 8 of 9 folds (≈ 89%) | 3 of 4 folds (75%) |
+| Obs. per fit | 196 | 314 / 353 | 391 |
+| Bias | High | Intermediate | Lowest |
+| Variance | High | Lower | Tends to be higher |
 
-::::
+: {tbl-colwidths="[22,22,26,30]"}
 
-:::{.notes}
-- ASK QUESTION, then advance to reveal the rest of the slide
-- Key idea: LOOCV has no randomness within one dataset, but its estimate can still change a lot across different datasets
-- LOOCV's n models are almost identical, so their errors rise and fall together, and averaging doesn't cancel them out
-- Overlap table: LOOCV training sets differ by just one observation. 10-fold training sets share 8 of 9 folds; 5-fold share 3 of 4
-- IF ASKED "is this always true?": the book only says LOOCV tends to have higher variance, but it's not a guarantee, just a general tendency
+- $k = 5$ or $10$ balances the two (shown **empirically**). **Next (6.2):** ridge regression makes the same trade-off
 :::
 
-## The Verdict: $k = 5$ or $k = 10$ {style="font-size: 0.8em;"}
-
-|  | Validation set | k-fold ($k = 5, 10$) | LOOCV |
-|:---|:---:|:---:|:---:|
-| Bias | High | Intermediate | Approximately unbiased |
-| Variance | High | Lower | Higher |
-| Model fits | 1 | $k$ | $n$ (1 for least squares) |
-
-: {tbl-colwidths="[18,22,28,32]"}
-
-<br>
-
-- $k = 5$ or $10$ have been shown **empirically** to give test error estimates with neither excessively high bias nor very high variance
-- **Coming up (Section 6.2):** ridge regression faces the same trade-off. Increasing its tuning parameter $\lambda$ makes the fit less flexible: lower variance, higher bias
-
 :::{.notes}
-- k-fold accepts a little more bias in exchange for lower variance
-- Link to next group: in ridge regression, λ controls flexibility. Bigger λ = less flexible = lower variance but higher bias. Same balancing act as choosing k
-- If asked: ridge's trade-off is about the model's predictions; choosing k is about the CV estimate of test error. Same idea (a bit more bias for less variance), applied to different things
+- Maggie showed k-fold is cheaper. The book's second reason is it's often more accurate
+- Bias: fewer observations per fit = worse fits = overestimates test error. LOOCV has the least bias
+- ASK QUESTION
+- Variance = new dataset, not rerunning. LOOCV's models are near-copies, like asking the same person the same question 392 times
+- k = 5 or 10: a bit more bias, less variance. Shown empirically to have the best balance between bias and variance
+- Ridge: bigger λ = less flexible = lower variance, higher bias
+- If asked if LOOCV always has a higher variance, the book says it tends to.
 :::
 
-## Cross-Validation on Classification Problems {style="font-size: 0.7em;"}
+## Cross-Validation for Classification {style="font-size: 0.75em;"}
 
-- So far: quantitative response, test error measured with MSE
-- Qualitative response: same procedure, but we count **misclassified observations** instead
-- **LOOCV error rate**:
+- Same procedure, but count **mistakes** instead of squared error. LOOCV error rate:
 
 $$CV_{(n)} = \frac{1}{n} \sum_{i=1}^{n} Err_i, \qquad Err_i = I(y_i \neq \hat{y}_i)$$
 
-- k-fold and validation set error rates are defined analogously
-- **Example**: logistic regression with polynomial terms of the predictors, e.g. degree 2:
+- **Example:** logistic regression with polynomial terms of the predictors, e.g. degree 2:
 
 $$\log\left(\frac{p}{1-p}\right) = \beta_0 + \beta_1 X_1 + \beta_2 X_1^2 + \beta_3 X_2 + \beta_4 X_2^2$$
 
 :::{.notes}
-- So far everything used MSE, so a quantitative response. CV works just as well for a qualitative response
-- Only difference: count mistakes instead of squared error. I() is the indicator function: 1 if we misclassify an observation i, 0 if we get it right
-- Link back to the Chapter 4.3 logistic regression presentation. Adding squared terms of the predictors (just like we did with horsepower) bends the decision boundary
+- So far everything was MSE. For a category, count mistakes: I() is 1 if we get observation i wrong, 0 if right
+- Link to 4.3 logistic regression. Squared terms bend the boundary, like adding horsepower squared
 :::
 
 ## Logistic Regression: Degrees 1 to 4 {style="font-size: 0.7em;"}
@@ -364,9 +318,8 @@ $$\log\left(\frac{p}{1-p}\right) = \beta_0 + \beta_1 X_1 + \beta_2 X_1^2 + \beta
 ::::
 
 :::{.notes}
-- Simulated data, so we know the true test error and the Bayes boundary (best possible)
-- Degree 1 (linear) misses the curve: 0.201. Degree 2 barely helps: 0.197. Degree 3 drops to 0.160. Degree 4 goes slightly back up: 0.162
-- On real data we wouldn't know these numbers. That's where CV comes in (next slide)
+- Degree 1 misses the curve. Degree 3 is best. Degree 4 is slightly worse
+- Simulated, so we know these test errors. On real data we don't, so we use CV
 :::
 
 ## Using 10-Fold CV to Choose Flexibility {style="font-size: 0.75em;"}
@@ -376,10 +329,10 @@ $$\log\left(\frac{p}{1-p}\right) = \beta_0 + \beta_1 X_1 + \beta_2 X_1^2 + \beta
 - Training error keeps falling, so it always picks the most flexible model. CV tracks the U-shaped test error and lands close to the best flexibility
 
 :::{.notes}
-- Training error (blue) mostly keeps going down as we add flexibility, so it can't be used to choose. Test error (orange) is U-shaped
-- Left: CV bottoms out at degree 4; true best is degree 3. Degrees 3 to 6 are nearly tied on test error, so picking 4 is fine
-- Right: KNN. K here is the **NUMBER OF NEIGHBOURS**, not folds. x-axis is 1/K, so more flexible to the right
-- CV slightly underestimates the error rate but finds approx. the right flexibility
+- Blue keeps falling, so it can't choose. Orange (test) is U-shaped
+- Left: CV picks degree 4, true best is 3. Degrees 3 to 6 are nearly tied, so 4 is fine
+- Right: KNN, same story. K = **NUMBER OF NEIGHBOURS**, not folds. More flexible to the right
+- CLOSING: the next presentation will use CV the same way to choose λ
 :::
 
 ## References
