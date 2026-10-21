@@ -270,13 +270,23 @@ $$CV_{(n)} = \frac{1}{n} \sum_{i=1}^{n} \left( \frac{y_i - \hat{y}_i}{1-h_i} \ri
 :::
 
 :::{.notes}
-- Maggie showed k-fold is cheaper. The book's second reason is it's often more accurate
-- Bias: fewer observations per fit = worse fits = overestimates test error. LOOCV has the least bias
+- Link back to Maggie: she showed k-fold is cheaper than LOOCV (k fits instead of n). The book gives a second, possibly more important reason: k-fold often gives a more accurate estimate of test error
+- Link back to Chapter 2: a good estimate needs low bias and low variance. Same idea, now applied to the CV estimate of test error
 - ASK QUESTION
-- Variance = new dataset, not rerunning. LOOCV's models are near-copies, like asking the same person the same question 392 times
-- k = 5 or 10: a bit more bias, less variance. Shown empirically to have the best balance between bias and variance
-- Ridge: bigger λ = less flexible = lower variance, higher bias
-- If asked if LOOCV always has a higher variance, the book says it tends to.
+- Variance = how much the estimate would change if we collected a brand-new dataset from the same population. It's not about rerunning on the same data
+- LOOCV averages n models trained on almost the same data (any two share 390 of 391 points). Their errors rise and fall together, so averaging doesn't cancel much
+- k-fold models overlap less, so their errors are less correlated and averaging cancels more
+- Walk the table top to bottom:
+- Obs. per fit: each method fits on fewer observations than the full 392
+- Bias = is the estimate systematically too high? Fewer observations = worse fit = estimate comes out too high. LOOCV has the least bias. **If bias were all that mattered, we'd always pick LOOCV**
+- Variance row: but LOOCV tends to have higher variance (what we just discussed)
+- Verdict: k = 5 or 10 gives up a little bias for less variance
+- Ridge (next group): bigger λ = less flexible = lower variance, higher bias. Same kind of trade-off
+
+
+
+- "Does LOOCV always have higher variance?" No. The book says it *tends* to. The worksheet shows it doesn't always appear, especially for stable methods like least squares
+- "Is this the same as Chapter 2's bias-variance?" Same idea, different object. Chapter 2 is about the model's predictions.
 :::
 
 ## Cross-Validation for Classification {style="font-size: 0.75em;"}
@@ -290,8 +300,18 @@ $$CV_{(n)} = \frac{1}{n} \sum_{i=1}^{n} Err_i, \qquad Err_i = I(y_i \neq \hat{y}
 $$\log\left(\frac{p}{1-p}\right) = \beta_0 + \beta_1 X_1 + \beta_2 X_1^2 + \beta_3 X_2 + \beta_4 X_2^2$$
 
 :::{.notes}
-- So far everything was MSE. For a category, count mistakes: I() is 1 if we get observation i wrong, 0 if right
-- Link to 4.3 logistic regression. Squared terms bend the boundary, like adding horsepower squared
+- So far the response was a number (mpg), so we measured error with MSE
+- Classification: the response is a category. Same CV procedure, but count mistakes instead of squaring errors
+- I() is the indicator function: 1 if we get observation i wrong, 0 if right. Average them gives the fraction misclassified
+- k-fold and validation set versions work the same way
+- Example: logistic regression from the 4.3 presentation, with squared terms added
+- Squared terms let the decision boundary curve
+
+
+- "What is log(p / (1 − p))?" The log-odds. p = probability of one class. Logistic regression models the log-odds as a linear function of the predictors
+- "Why both X1 and X2?" The data has two predictors, the two axes of the next figure
+- "Why is it quadratic?" Each predictor appears squared. Setting the right side to 0 gives the boundary, and squared terms make it a curve instead of a line
+- "Subscripts vs superscripts?" Subscript = which predictor. Superscript = power. X1² = first predictor squared
 :::
 
 ## Logistic Regression: Degrees 1 to 4 {style="font-size: 0.7em;"}
@@ -318,8 +338,18 @@ $$\log\left(\frac{p}{1-p}\right) = \beta_0 + \beta_1 X_1 + \beta_2 X_1^2 + \beta
 ::::
 
 :::{.notes}
-- Degree 1 misses the curve. Degree 3 is best. Degree 4 is slightly worse
-- Simulated, so we know these test errors. On real data we don't, so we use CV
+- Simulated data: two predictors, two classes (orange and blue)
+- Purple dashed line = Bayes decision boundary, the best possible boundary. We only know it because the data is simulated. Even it gets 13.3% wrong, because the classes overlap
+- Black line = logistic regression boundary at each degree
+- Degree 1: straight line, misses the curve, ~20% error
+- Degree 2: barely helps, 19.7%
+- Degree 3: drops to 16%, closest to the purple line
+- Degree 4: slightly worse, 16.2%. Extra flexibility starts to hurt
+- On real data we don't know these test errors or the Bayes boundary. How we choose the degree is on the next slide
+
+
+- "Why does degree 4 do worse?" It's flexible enough to start fitting noise in the training data (overfitting)
+- "What makes the Bayes boundary the best?" It classifies using the true probabilities, which we only know for simulated data
 :::
 
 ## Using 10-Fold CV to Choose Flexibility {style="font-size: 0.75em;"}
@@ -329,10 +359,21 @@ $$\log\left(\frac{p}{1-p}\right) = \beta_0 + \beta_1 X_1 + \beta_2 X_1^2 + \beta
 - Training error keeps falling, so it always picks the most flexible model. CV tracks the U-shaped test error and lands close to the best flexibility
 
 :::{.notes}
-- Blue keeps falling, so it can't choose. Orange (test) is U-shaped
-- Left: CV picks degree 4, true best is 3. Degrees 3 to 6 are nearly tied, so 4 is fine
-- Right: KNN, same story. K = **NUMBER OF NEIGHBOURS**, not folds. More flexible to the right
-- CLOSING: the next presentation will use CV the same way to choose λ
+- Three curves, x-axis = flexibility (more flexible to the right)
+  - Blue = training error. Same data the model was fit on
+  - Orange = true test error. Only known because the data is simulated
+  - Black = 10-fold CV error. What we can actually compute on real data
+- Blue keeps falling, so it would always pick the most flexible model. Same lesson as Maggie's training MSE
+- Orange is U-shaped: too rigid on the left, overfitting on the right
+- Left: CV picks degree 4, true best is 3. Degrees 3 to 6 are nearly tied on test error, so 4 is a fine choice
+- CV slightly underestimates the error, but it finds about the right flexibility. Same lesson as Maggie's Figure 5.6
+- Right: KNN, same story. K = NUMBER OF NEIGHBOURS, not folds. x-axis is 1/K so more flexible is to the right
+
+
+- "What is KNN?" Classify a point by a majority vote of its K nearest training points
+- "Why does a large K give a smooth boundary?" More neighbours vote, so one odd point can't flip the prediction
+- "Why does blue drop off the bottom on the right?" The y-axis starts around 0.11. Training error keeps falling toward 0 at K = 1, where each point is its own nearest neighbour
+- "Why can't we see the orange line on real data?" It needs lots of new data from the same population, which real datasets don't have
 :::
 
 ## References

@@ -10,7 +10,7 @@
   <meta name="generator" content="quarto-1.10.18">
 
   <meta name="author" content="Shrey Sati and Maggie Huang">
-  <meta name="dcterms.date" content="2026-10-19">
+  <meta name="dcterms.date" content="2026-10-20">
   <title>Cross-Validation</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -145,7 +145,7 @@ Shrey Sati and Maggie Huang
 </div>
 </div>
 
-  <p class="date">October 19, 2026</p>
+  <p class="date">October 20, 2026</p>
 </section>
 <section id="section-5.1" class="slide level2 center">
 <h2>Section 5.1</h2>
@@ -586,14 +586,20 @@ Shrey Sati and Maggie Huang
 </div>
 <aside class="notes">
 <ul>
-<li>Maggie showed k-fold is cheaper. The book’s second reason: it’s often more accurate</li>
-<li>Bias: fewer observations per fit = worse fits = overestimates test error. Point at the first row: LOOCV has the least bias</li>
-<li>ASK the question, pause, then advance</li>
-<li>Variance = new dataset, not rerunning. LOOCV’s models are near-copies, like asking the same person the same question 392 times</li>
-<li>k = 5 or 10: a bit more bias, less variance. “Empirically” = from experience, not a proof</li>
-<li>Ridge: bigger λ = less flexible = lower variance, higher bias</li>
-<li>If asked “always true?”: the book says <em>tends to</em>. The worksheet shows it doesn’t always appear</li>
-<li>If asked about 314 / 353: (k − 1)n/k with n = 392, our calculation</li>
+<li><p>Link back to Maggie: she showed k-fold is cheaper than LOOCV (k fits instead of n). The book gives a second, possibly more important reason: k-fold often gives a more accurate estimate of test error</p></li>
+<li><p>Link back to Chapter 2: a good estimate needs low bias and low variance. Same idea, now applied to the CV estimate of test error</p></li>
+<li><p>ASK QUESTION</p></li>
+<li><p>Variance = how much the estimate would change if we collected a brand-new dataset from the same population. It’s not about rerunning on the same data</p></li>
+<li><p>LOOCV averages n models trained on almost the same data (any two share 390 of 391 points). Their errors rise and fall together, so averaging doesn’t cancel much</p></li>
+<li><p>k-fold models overlap less, so their errors are less correlated and averaging cancels more</p></li>
+<li><p>Walk the table top to bottom:</p></li>
+<li><p>Obs. per fit: each method fits on fewer observations than the full 392</p></li>
+<li><p>Bias = is the estimate systematically too high? Fewer observations = worse fit = estimate comes out too high. LOOCV has the least bias. <strong>If bias were all that mattered, we’d always pick LOOCV</strong></p></li>
+<li><p>Variance row: but LOOCV tends to have higher variance (what we just discussed)</p></li>
+<li><p>Verdict: k = 5 or 10 gives up a little bias for less variance</p></li>
+<li><p>Ridge (next group): bigger λ = less flexible = lower variance, higher bias. Same kind of trade-off</p></li>
+<li><p>“Does LOOCV always have higher variance?” No.&nbsp;The book says it <em>tends</em> to. The worksheet shows it doesn’t always appear, especially for stable methods like least squares</p></li>
+<li><p>“Is this the same as Chapter 2’s bias-variance?” Same idea, different object. Chapter 2 is about the model’s predictions.</p></li>
 </ul>
 <style type="text/css">
         span.MJX_Assistive_MathML {
@@ -619,9 +625,16 @@ Shrey Sati and Maggie Huang
 <p><span class="math display">\[\log\left(\frac{p}{1-p}\right) = \beta_0 + \beta_1 X_1 + \beta_2 X_1^2 + \beta_3 X_2 + \beta_4 X_2^2\]</span></p>
 <aside class="notes">
 <ul>
-<li>So far everything was MSE. For a category, count mistakes: I() is 1 if we get observation i wrong, 0 if right</li>
-<li>Link to 4.3: logistic regression. Squared terms bend the boundary, like adding horsepower squared</li>
-<li>Keep this quick, ~20 s</li>
+<li><p>So far the response was a number (mpg), so we measured error with MSE</p></li>
+<li><p>Classification: the response is a category. Same CV procedure, but count mistakes instead of squaring errors</p></li>
+<li><p>I() is the indicator function: 1 if we get observation i wrong, 0 if right. Average them gives the fraction misclassified</p></li>
+<li><p>k-fold and validation set versions work the same way</p></li>
+<li><p>Example: logistic regression from the 4.3 presentation, with squared terms added</p></li>
+<li><p>Squared terms let the decision boundary curve</p></li>
+<li><p>“What is log(p / (1 − p))?” The log-odds. p = probability of one class. Logistic regression models the log-odds as a linear function of the predictors</p></li>
+<li><p>“Why both X1 and X2?” The data has two predictors, the two axes of the next figure</p></li>
+<li><p>“Why is it quadratic?” Each predictor appears squared. Setting the right side to 0 gives the boundary, and squared terms make it a curve instead of a line</p></li>
+<li><p>“Subscripts vs superscripts?” Subscript = which predictor. Superscript = power. X1² = first predictor squared</p></li>
 </ul>
 <style type="text/css">
         span.MJX_Assistive_MathML {
@@ -683,8 +696,16 @@ Shrey Sati and Maggie Huang
 </div></div>
 <aside class="notes">
 <ul>
-<li>Degree 1 misses the curve. Degree 3 is best. Degree 4 is slightly worse</li>
-<li>Simulated, so we know these test errors. On real data we don’t, so we use CV</li>
+<li><p>Simulated data: two predictors, two classes (orange and blue)</p></li>
+<li><p>Purple dashed line = Bayes decision boundary, the best possible boundary. We only know it because the data is simulated. Even it gets 13.3% wrong, because the classes overlap</p></li>
+<li><p>Black line = logistic regression boundary at each degree</p></li>
+<li><p>Degree 1: straight line, misses the curve, ~20% error</p></li>
+<li><p>Degree 2: barely helps, 19.7%</p></li>
+<li><p>Degree 3: drops to 16%, closest to the purple line</p></li>
+<li><p>Degree 4: slightly worse, 16.2%. Extra flexibility starts to hurt</p></li>
+<li><p>On real data we don’t know these test errors or the Bayes boundary. So how would we choose the degree? Next slide</p></li>
+<li><p>“Why does degree 4 do worse?” It’s flexible enough to start fitting noise in the training data (overfitting)</p></li>
+<li><p>“What makes the Bayes boundary the best?” It classifies using the true probabilities, which we only know for simulated data</p></li>
 </ul>
 <style type="text/css">
         span.MJX_Assistive_MathML {
@@ -709,7 +730,7 @@ Shrey Sati and Maggie Huang
 <li>Blue keeps falling, so it can’t choose. Orange (test) is U-shaped</li>
 <li>Left: CV picks degree 4, true best is 3. Degrees 3 to 6 are nearly tied, so 4 is fine</li>
 <li>Right: KNN, same story. K = <strong>NUMBER OF NEIGHBOURS</strong>, not folds. More flexible to the right</li>
-<li>Close: the next group will use CV the same way to choose λ. Now the worksheet</li>
+<li>CLOSING: the next presentation will use CV the same way to choose λ</li>
 </ul>
 <style type="text/css">
         span.MJX_Assistive_MathML {
